@@ -3,10 +3,13 @@ import wave
 import numpy as np
 import sounddevice as sd
 
+# Set to None to automatically select system default microphone.
+# If you need a specific hardware index, set it here (e.g., DEVICE_INDEX = 1)
+DEVICE_INDEX = None 
 SAMPLE_RATE = 16000
 CHANNELS = 1
 MAX_BAR_LENGTH = 30
-DEVICE_INDEX = 2
+
 # Thread-safe queue to hold raw audio frames in memory
 audio_queue = queue.Queue()
 
@@ -33,11 +36,15 @@ def save_wav(filename, audio_data, sample_rate):
         wf.writeframes(audio_int16.tobytes())
 
 def main():
+    # Automatically resolve default input device if DEVICE_INDEX is None
+    target_device = DEVICE_INDEX if DEVICE_INDEX is not None else sd.default.device[0]
+    dev_info = sd.query_devices(target_device, 'input')
+    
+    print(f"Using Input Device: {dev_info['name']} (Index {dev_info['index']})")
     print("Recording started. Speak a short sentence...")
     print(">>> Press [ENTER] to stop recording and save 'test_record.wav' <<<\n")
     
-    # Stream stays open until Enter key is pressed
-    with sd.InputStream(device=DEVICE_INDEX, samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback):
+    with sd.InputStream(device=target_device, samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback):
         input()
         
     print("\n\nStopping recording and writing to disk...")
