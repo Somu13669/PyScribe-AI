@@ -6,6 +6,7 @@ import numpy as np
 import sounddevice as sd
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
+from pynput import keyboard
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
@@ -23,6 +24,22 @@ class PyScribeApp:
         self.stream = None
 
         self._create_widgets()
+    def _on_key_press(self, key):
+        try:
+            if key == keyboard.Key.space and not self.key_held:
+                self.key_held = True
+
+                self.root.after(0, self.start_recording)
+        except AttributeError:
+            pass
+    def _on_key_release(self, key):
+        try:
+            if key == keyboard.Key.space and self.key_held:
+                self.key_held = False
+
+                self.root.after(0, self.stop_recording)
+        except AttributeError:
+            pass
 
     def _create_widgets(self):
 
