@@ -8,11 +8,12 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from pynput import keyboard
 import pyttsx3
-
+import customtkinter as ctk
 SAMPLE_RATE = 16000
 CHANNELS = 1
 OUTPUT_FILENAME = "test_record.wav"
-
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 class PyScribeApp:
     def __init__(self, root):
         self.root = root
@@ -55,27 +56,28 @@ class PyScribeApp:
         self.btn_send.config(state=tk.NORMAL)
         self.btn_record.config(state=tk.NORMAL)
     def _create_widgets(self):
+        self.header = ctk.CTkLabel(self.root, text="PyScribe AI", font=("Arial", 24))
+        self.header.pack(pady=10)
 
-        header = ttk.Label(self.root, text="pyscribeAIAss", font=("helvetica",16))
-        header.pack(pady=10)
-
-        btn_frame = ttk.Frame(self.root)
-        btn_frame.pack(pady=10)
-
-        self.btn_record = ttk.Button(btn_frame, text="start rec",command=self.toggle_recording)
-        self.btn_record.grid(row=0, column=0, padx=10)
-
-        self.btn_send = ttk.Button(btn_frame, text="send to LLM", command=self.send_to_llm_thread, state=tk.DISABLED)
-        self.btn_send.grid(row=0, column=1, padx=10)
-
-        self.lbl_status = ttk.Label(self.root, text='Status: ready')
+        self.btn_frame = ctk.CTkButton(self.root, text="start rec", command=self.toggle_recording)
+        self.btn_frame.pack(pady=10)
+        self.btn_record = ctk.CTkButton(self.root, text="start rec", command=self.toggle_recording)
+        self.btn_record.pack(pady=10)
+        self.btn_send = ctk.CTkButton(self.root, text="send to LLM", command=self.send_to_llm_thread)
+        self.btn_send.pack(pady=10)
+        self.lbl_response = ctk.CTkLabel(self.root, text="LLM Response:", font=("Arial", 14))
+        self.lbl_response.pack(pady=5)
+        self.txt_response = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, width=70, height=15, font=("Arial", 12))
+        self.txt_response.pack(pady=5)
+        self.lbl_status = ctk.CTkLabel(self.root, text="status: idle", font=("Arial", 12))
         self.lbl_status.pack(pady=5)
 
-        lbl_response = ttk.Label(self.root, text="LLMresponse:")
-        lbl_response.pack(anchor="w", padx=20, pady=(10,2))
+        self.listener = keyboard.Listener(
+            on_press=self._on_key_press,
+            on_release=self._on_key_release
+        )
+        self.listener.start()
 
-        self.txt_response = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, width=65, height=15)
-        self.txt_response.pack(padx=20, pady=5)
 
     def toggle_recording(self):
         if not self.is_recording:
