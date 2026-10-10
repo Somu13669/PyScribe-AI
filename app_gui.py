@@ -7,6 +7,7 @@ import sounddevice as sd
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from pynput import keyboard
+import pyttsx3
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
@@ -23,6 +24,7 @@ class PyScribeApp:
         self.audio_queue = queue.Queue()
         self.stream = None
 
+        self.key_held = False
         self._create_widgets()
     def _on_key_press(self, key):
         try:
@@ -40,7 +42,18 @@ class PyScribeApp:
                 self.root.after(0, self.stop_recording)
         except AttributeError:
             pass
-
+    def speak_text(self, text):
+        try:
+            engine = pyttsx3.init()
+            engine.say(text)
+            engine.runAndWait()
+        except Exception as e:
+            print(f"Error occurred while speaking text: {e}")
+    def _display_result(self, response_text, status_text, status_color):
+        self.txt_response.insert(tk.END, response_text)
+        self.lbl_status.config(text=status_text, foreground=status_color)
+        self.btn_send.config(state=tk.NORMAL)
+        self.btn_record.config(state=tk.NORMAL)
     def _create_widgets(self):
 
         header = ttk.Label(self.root, text="pyscribeAIAss", font=("helvetica",16))
