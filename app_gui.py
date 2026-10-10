@@ -52,16 +52,16 @@ class PyScribeApp:
             print(f"Error occurred while speaking text: {e}")
     def _display_result(self, response_text, status_text, status_color):
         self.txt_response.insert(tk.END, response_text)
-        self.lbl_status.configure(text=status_text, foreground=status_color)
-        self.btn_send.configure(state=tk.NORMAL)
-        self.btn_record.configure(state=tk.NORMAL)
+        self.lbl_status.configure(text=status_text, text_color=status_color)
+        self.btn_send.configure(state=ctk.NORMAL)
+        self.btn_record.configure(state=ctk.NORMAL)
     def _create_widgets(self):
         self.header = ctk.CTkLabel(self.root, text="PyScribe AI", font=("Arial", 24))
         self.header.pack(pady=10)
 
         self.btn_frame = ctk.CTkButton(self.root, text="start rec", command=self.toggle_recording)
         self.btn_frame.pack(pady=10)
-        self.btn_record = ctk.CTkButton(self.root, text="start rec", command=self.toggle_recording)
+        self.btn_record = ctk.CTkButton(self.root, text="stop rec", command=self.toggle_recording)
         self.btn_record.pack(pady=10)
         self.btn_send = ctk.CTkButton(self.root, text="send to LLM", command=self.send_to_llm_thread)
         self.btn_send.pack(pady=10)
@@ -110,9 +110,9 @@ class PyScribeApp:
             self.stream.close()
             self.stream = None
         self._save_wav_file()
-        self.btn_record.config(text="start rec")
-        self.btn_send.config(state=tk.NORMAL)
-        self.lbl_status.config(text="recording stopped")
+        self.btn_record.configure(text="stop rec")
+        self.btn_send.configure(state=ctk.NORMAL)
+        self.lbl_status.configure(text="recording stopped")
     def _save_wav_file(self):
         recorded_chunks =[]
         while not self.audio_queue.empty():
@@ -130,9 +130,9 @@ class PyScribeApp:
 
 
     def send_to_llm_thread(self):
-        self.btn_send.config(state=tk.DISABLED)
-        self.btn_record.config(state=tk.DISABLED)
-        self.lbl_status.config(text="transcribing")
+        self.btn_send.configure(state=ctk.DISABLED)
+        self.btn_record.configure(state=ctk.DISABLED)
+        self.lbl_status.configure(text="transcribing")
 
         self.txt_response.delete("1.0", tk.END)
 
@@ -145,23 +145,23 @@ class PyScribeApp:
         try:
             transcript = transcribe_audio(OUTPUT_FILENAME)
             if not transcript:
-                self._display_result("No speech detected.", "status: no speech", "red")
+                self.root.after(0, lambda: self._display_result("No speech detected.", "status: no speech", "red"))
                 return
 
-            self.lbl_status.config(text="querying LLM")
+            self.lbl_status.configure(text="querying LLM")
             response = ask_ollama(transcript)
 
-            self._display_result(response, "status: done", "green")
+            self.root.after(0, lambda: self._display_result(response, "status: done", "green")) 
 
         except Exception as e:
-            self._display_result(f"Error: {str(e)}", "status: error", "red")
+            self.root.after(0, lambda: self._display_result(f"Error: {str(e)}", "status: error", "red"))
 
 
     def _display_result(self, response_text, status_text, status_color):
         self.txt_response.insert(tk.END, response_text)
-        self.lbl_status.config(text=status_text, foreground=status_color)
-        self.btn_send.config(state=tk.NORMAL)
-        self.btn_record.config(state=tk.NORMAL)
+        self.lbl_status.configure(text=status_text, text_color=status_color)
+        self.btn_send.configure(state=ctk.NORMAL)
+        self.btn_record.configure(state=ctk.NORMAL)
 
 
 if __name__ == "__main__":
