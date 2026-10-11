@@ -11,7 +11,7 @@ from pynput import keyboard
 import pyttsx3
 import customtkinter as ctk
 import time
-import from history_manager import save_entry, load_history
+from history_manager import save_entry, load_history
 SAMPLE_RATE = 16000
 CHANNELS = 1
 OUTPUT_FILENAME = "test_record.wav"
@@ -19,6 +19,7 @@ OUTPUT_FILENAME = "test_record.wav"
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
+
 class PyScribeApp:
     def __init__(self, root):
         self.root = root
@@ -63,7 +64,7 @@ class PyScribeApp:
     def _create_widgets(self):
         self.header = ctk.CTkLabel(self.root, text="PyScribe AI", font=("Arial", 24))
         self.header.pack(pady=10)
-        self.button_frame = ctk.CTkFrame(self.root, text="Save entry to history", font=("Arial", 14), command=self.save_entry)
+        self.button_frame = ctk.CTkFrame(self.root, text="Save entry to history", font=("Arial", 14), command=self.save_current_history)
         self.button_frame.pack(pady=10)
         self.button_frame = ctk.CTkButton(self.root, text="Show entry from history", command=self.load_entry)
         self.btn_frame = ctk.CTkButton(self.root, text="start rec", command=self.toggle_recording)
@@ -171,7 +172,41 @@ class PyScribeApp:
         self.btn_send.configure(state=ctk.NORMAL)
         self.btn_record.configure(state=ctk.NORMAL)
 
+    def save_current_history(self):
+        if not self.last_response:
+            self.lbl_status.configure(text="status: no response to save", text_color="red")
+            return
 
+        save_entry(self.last_transcript, self.last_response)
+        self.lbl_status.configure(text="status: entry saved", text_color="green")
+
+    def show_history_window(self):
+        history_window = ctk.CTkToplevel(self.root)
+        history_window.title("History")
+        history_window.geometry("600x400")
+
+        txt = ctk.CTkTextbox(history_window, wrap=tk.WORD, width=70, height=20, font=("Arial", 12))
+        txt.pack(pady=10)
+
+        if not history_data:
+            txt.insert(tk.END, "No history available.")
+        else:
+            for entry in history_data:
+                timestamp = entry.get("timestamp", "N/A")
+                transcript = entry.get("transcript", "N/A")
+                response = entry.get("response", "N/A")
+                txt.insert(tk.END, f"Timestamp: {timestamp}\nTranscript: {transcript}\nResponse: {response}\n\n")\
+
+            return
+
+    def load_entry(self):
+        history_data = load_history()
+        if not history_data:
+            messagebox.showinfo("History", "No history available.")
+            return
+
+        self.show_history_window()
+        
 if __name__ == "__main__":
     root = ctk.CTk()
     app = PyScribeApp(root)
