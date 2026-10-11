@@ -1,4 +1,5 @@
 import os
+from pydoc import text
 import queue
 import wave
 import threading
@@ -9,9 +10,13 @@ from tkinter import ttk, scrolledtext, messagebox
 from pynput import keyboard
 import pyttsx3
 import customtkinter as ctk
+import time
+import from history_manager import save_entry, load_history
 SAMPLE_RATE = 16000
 CHANNELS = 1
 OUTPUT_FILENAME = "test_record.wav"
+
+
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 class PyScribeApp:
@@ -58,7 +63,9 @@ class PyScribeApp:
     def _create_widgets(self):
         self.header = ctk.CTkLabel(self.root, text="PyScribe AI", font=("Arial", 24))
         self.header.pack(pady=10)
-
+        self.button_frame = ctk.CTkFrame(self.root, text="Save entry to history", font=("Arial", 14), command=self.save_entry)
+        self.button_frame.pack(pady=10)
+        self.button_frame = ctk.CTkButton(self.root, text="Show entry from history", command=self.load_entry)
         self.btn_frame = ctk.CTkButton(self.root, text="start rec", command=self.toggle_recording)
         self.btn_frame.pack(pady=10)
         self.btn_record = ctk.CTkButton(self.root, text="stop rec", command=self.toggle_recording)
@@ -113,6 +120,7 @@ class PyScribeApp:
         self.btn_record.configure(text="stop rec")
         self.btn_send.configure(state=ctk.NORMAL)
         self.lbl_status.configure(text="recording stopped")
+      
     def _save_wav_file(self):
         recorded_chunks =[]
         while not self.audio_queue.empty():
